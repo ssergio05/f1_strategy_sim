@@ -1,0 +1,45 @@
+# Prerrequisitos
+*.d
+
+# Archivos compilados e intermedios de C++
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+*.lib
+*.a
+*.pdb
+*.exp
+
+# CMake y Build
+build/
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+
+# Archivos de configuración de IDEs (Visual Studio, VS Code, etc.)
+.vscode/
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.user
+*.vcxproj.filters
+
+# Archivos generados por tu simulador (Tú decides si quieres ignorarlos o no)
+*.csv
+*.png
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/

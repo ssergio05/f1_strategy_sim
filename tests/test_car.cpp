@@ -1,0 +1,61 @@
+#include <gtest/gtest.h>
+
+#include "f1sim/Car.hpp"
+#include "f1sim/TyreModel.hpp"
+
+#include <memory>
+
+namespace {
+
+constexpr double BASE_LAP_TIME = 90.0;
+constexpr double INITIAL_FUEL = 100.0;
+constexpr double FUEL_DELTA = 0.03;
+constexpr double TOL = 1e-5;
+
+} // anonymous namespace
+
+TEST(CarTest, ComputeLapTime)
+{
+    auto tyre = std::make_shared<f1sim::TyreModel>(0.5, 0.0, 0.0, 50.0);
+    const f1sim::Car car(BASE_LAP_TIME, INITIAL_FUEL, FUEL_DELTA, tyre);
+
+    const double result = car.computeLapTime(5.0);
+    const double degradation = 0.5 * 5.0;
+    const double expected = BASE_LAP_TIME - (FUEL_DELTA * INITIAL_FUEL) + degradation;
+
+    EXPECT_NEAR(result, expected, TOL);
+}
+
+TEST(CarTest, UpdateFuel)
+{
+    auto tyre = std::make_shared<f1sim::TyreModel>(0.5, 0.0, 0.0, 50.0);
+    f1sim::Car car(BASE_LAP_TIME, INITIAL_FUEL, FUEL_DELTA, tyre);
+
+    const double before = car.computeLapTime(5.0);
+    car.updateFuel();
+    const double after = car.computeLapTime(5.0);
+
+    const double expectedDiff = FUEL_DELTA * FUEL_DELTA;
+    EXPECT_NEAR(after - before, expectedDiff, TOL);
+}
+
+TEST(CarTest, ChangeTyre)
+{
+    auto highDegTyre = std::make_shared<f1sim::TyreModel>(1.0, 0.0, 0.0, 50.0);
+    auto lowDegTyre = std::make_shared<f1sim::TyreModel>(0.1, 0.0, 0.0, 50.0);
+
+    f1sim::Car car(BASE_LAP_TIME, INITIAL_FUEL, FUEL_DELTA, highDegTyre);
+
+    const double before = car.computeLapTime(5.0);
+    car.changeTyre(lowDegTyre);
+    const double after = car.computeLapTime(5.0);
+
+    const double degHigh = 1.0 * 5.0;
+    const double degLow = 0.1 * 5.0;
+    const double expectedBefore = BASE_LAP_TIME - (FUEL_DELTA * INITIAL_FUEL) + degHigh;
+    const double expectedAfter = BASE_LAP_TIME - (FUEL_DELTA * INITIAL_FUEL) + degLow;
+
+    EXPECT_NEAR(before, expectedBefore, TOL);
+    EXPECT_NEAR(after, expectedAfter, TOL);
+    EXPECT_GT(before, after);
+}
