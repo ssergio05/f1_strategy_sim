@@ -23,7 +23,8 @@ TEST(CarTest, ComputeLapTime)
 
 TEST(CarTest, UpdateFuel)
 {
-    auto tyre = std::make_shared<f1sim::TyreModel>(0.5, 0.0, 0.0, 50.0);
+    // Cambiamos el parámetro ALPHA a 0.0 para aislar el efecto del combustible
+    auto tyre = std::make_shared<f1sim::TyreModel>(0.0, 0.0, 0.0, 50.0);
     f1sim::Car car(BASE_LAP_TIME, INITIAL_FUEL, FUEL_DELTA, tyre);
 
     const double before = car.computeLapTime(1.0); 
