@@ -482,7 +482,7 @@ class DemoSession:
             self.sc_until_lap = 4
 
         competitors = []
-        for drv in self.self.drivers:
+        for drv in self.drivers:
             drv["laps_on_tyre"] += 1
             if drv["pit_lap"] == self.current_lap:
                 drv["compound"] = drv["next_compound"]
