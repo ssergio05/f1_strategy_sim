@@ -1,79 +1,56 @@
-# F1 Monte Carlo Strategy Simulator 🏎️⏱️
+# 🏎️ F1 Live Strategy Simulator & Monte Carlo Engine
 
-An ultra-fast, multithreaded Formula 1 race strategy simulator built in modern **C++20**. It uses Monte Carlo methods to evaluate race strategies by calculating tyre degradation profiles, fuel mass depletion, and stochastic race events (traffic, driver variance) across tens of thousands of parallel race simulations.
+![C++](https://img.shields.io/badge/C++-17-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.9-green.svg)
+![CMake](https://img.shields.io/badge/CMake-Build-orange.svg)
+![FastF1](https://img.shields.io/badge/Data-FastF1%20%7C%20AWS-yellow.svg)
 
-Coupled with a **Python/Pandas** visualization bridge, it generates professional telemetry dashboards to assist the pitwall in decision-making.
+## 📌 Overview
+An advanced, real-time Formula 1 race strategy simulator that combines a **high-performance C++ Monte Carlo Engine** with a **Python-based live telemetry tracker**. This project is designed to predict race outcomes, evaluate tyre degradation, and optimize pit-stop strategies dynamically using live AWS telemetry data.
 
-## 🚀 Core Engine Features
+## ⚙️ Core Architecture
+The system follows a strict decoupling between heavy mathematical computation and live data processing:
 
-* **Lock-Free Concurrency**: Leverages `std::async` and hardware concurrency to run 10,000+ full race simulations in ~11 milliseconds by isolating memory states per thread.
-* **Zero-Overhead Math**: Aggressive compiler optimization (`-O3 -march=native`), `constexpr`/`noexcept` math functions, and contiguous memory structures to maximize L1/L2 cache locality.
-* **Stochastic Physics Engine**: Simulates fuel weight penalty and a dual-phase tyre degradation model (linear wear + exponential cliff).
-* **100% Test Coverage**: Fully unit-tested mathematical core using **Google Test**.
-* **Telemetry Pipeline**: C++ backend exports raw data to CSV, consumed by a Python telemetry script for dark-mode data visualization.
+1. **The C++ Core Engine (`/src`, `/include/f1sim`):** Handles the mathematical modeling of the race. It features a custom tyre degradation model and a Monte Carlo simulation engine capable of running thousands of race permutations in milliseconds to calculate expected total race times and probabilistic finishing positions.
+2. **The Python Telemetry Layer (`/scripts`):** Acts as the live data ingestion and visualization layer. It hooks into live telemetry (via AWS/FastF1), handles missing data points (e.g., VSC latency dropouts), and outputs the current race state to `live_state.json`.
+3. **Inter-Process Communication:** The C++ engine parses the live JSON state (via `nlohmann/json`), computes the Monte Carlo distributions, and exports the results to CSV files (`monte_carlo_results.csv`), which are then dynamically plotted by Python using Matplotlib.
 
-## 🧮 Mathematical Model
+## 🛠️ Key Features
+- **Live AWS Telemetry Integration:** Real-time tracking of lap times, tyre compounds, and driver positions.
+- **Dynamic Tyre Degradation Model:** Calculates performance drop-off based on tyre age and compound (Soft, Medium, Hard).
+- **Monte Carlo Strategy Optimization:** Runs probabilistic distributions to determine the optimal pit lap and predict final race gaps.
+- **Robust Anomaly Handling:** Features a "memory" state in the Python tracker to handle temporary F1 API telemetry dropouts (e.g., during pit entry or Virtual Safety Car periods) without crashing the C++ engine.
 
-The physics engine calculates the lap time at any given lap $L$ using the following model:
+## 📂 Project Structure
+```text
+f1_strategy_sim/
+├── include/f1sim/       # C++ Headers (Car, RaceSession, MonteCarloEngine, TyreModel, etc.)
+├── src/                 # C++ Source Files 
+├── scripts/             # Python Modules (live_tracker.py, mega_dashboard.py)
+├── tests/               # Unit tests for the C++ mathematical models
+├── CMakeLists.txt       # Build configuration
+└── live_dashboard.bat   # Windows execution script to run the full pipeline
+```
 
-`T_lap = T_base - (Delta_fuel * M_fuel) + (Alpha * L) + Beta * e^(Lambda * (L - L_cliff))`
+## 🚀 Build and Run
 
-* **Fuel Penalty (`Delta_fuel * M_fuel`)**: The car gets faster as fuel mass decreases.
-* **Linear Degradation (`Alpha * L`)**: Standard tyre wear over time.
-* **Exponential Cliff (`Beta * e^...`)**: Simulates the sudden loss of grip when a tyre compound drops out of its working temperature/rubber window after `L_cliff`.
+### Prerequisites
+- C++17 Compiler (GCC/MSVC) and CMake.
+- Python 3.9+ with `requirements-live.txt` installed.
 
-## 🛠️ Prerequisites
-
-* **C++ Compiler**: MSVC (Windows), GCC, or Clang with C++20 support.
-* **Build System**: CMake (v3.14+).
-* **Python 3.x**: With `pandas` and `matplotlib` for the visualization dashboard.
-
-## ⚙️ Build Instructions (Out-of-source Build)
-
-The project handles dependencies (like Google Test) automatically via CMake `FetchContent`.
-
+### Build the C++ Engine
 ```bash
-# 1. Clone the repository
-git clone https://github.com/ssergio05/f1_strategy_sim.git
-cd f1_strategy_sim
-
-# 2. Create build directory and configure
-mkdir build
-cd build
+mkdir build && cd build
 cmake ..
-
-# 3. Build the project (Release mode for maximum CPU optimization)
 cmake --build . --config Release
 ```
 
-## 🏁 Running the Simulation & Tests
-
-Execute the test suite to validate the physics engine:
+### Run the Live Dashboard
+Execute the batch script to launch both the live tracker and the Monte Carlo visualization dashboard simultaneously:
 ```bash
-ctest -C Release --output-on-failure
+./live_dashboard.bat
 ```
 
-Run the Monte Carlo simulator:
-```bash
-# Windows
-Release\f1_simulator.exe
-
-# Linux/macOS
-./f1_simulator
-```
-
-## 📊 Telemetry Visualization
-
-After running the C++ simulator, the engine will generate `lap_times.csv` and `monte_carlo_results.csv` in your build folder. To render the pitwall dashboard:
-
-```bash
-# Run from the project root
-python scripts/plot_results.py
-```
-*(This will generate a high-resolution `f1_strategy_dashboard.png` with the degradation profile and the Monte Carlo Gaussian distribution).*
-
-## 📂 Architecture Overview
-
-* `include/` & `src/`: Core C++20 engine (`TyreModel`, `Car`, `RaceSession`, `MonteCarloEngine`).
-* `tests/`: Google Test suite ensuring the mathematical integrity of the physical models.
-* `scripts/`: Python analytics bridge.
+## 👨‍💻 Author
+**Sergio**
+*Software Engineering & Race Strategy Enthusiast*

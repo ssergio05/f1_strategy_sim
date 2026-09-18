@@ -12,7 +12,7 @@ std::vector<SimulationResult> MonteCarloEngine::runSimulations(
 {
     uint32_t numThreads = std::thread::hardware_concurrency();
     if (numThreads == 0) {
-        numThreads = 2;
+        numThreads = 2; // Fallback for systems that cannot detect hardware concurrency
     }
 
     uint32_t chunkSize = (numSimulations + numThreads - 1) / numThreads;
@@ -23,6 +23,8 @@ std::vector<SimulationResult> MonteCarloEngine::runSimulations(
     uint32_t start = 0;
     for (uint32_t t = 0; t < numThreads && start < numSimulations; ++t) {
         uint32_t end = std::min(start + chunkSize, numSimulations);
+        
+        // Dispatch parallel simulation workloads
         futures.push_back(std::async(std::launch::async, [&baseSession, start, end]() {
             std::vector<SimulationResult> chunkResults;
             chunkResults.reserve(end - start);
@@ -35,6 +37,7 @@ std::vector<SimulationResult> MonteCarloEngine::runSimulations(
         start = end;
     }
 
+    // Aggregate results from all threads
     std::vector<SimulationResult> allResults;
     allResults.reserve(numSimulations);
     for (auto& future : futures) {

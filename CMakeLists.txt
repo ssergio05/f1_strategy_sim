@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 
 project(f1_strategy_sim LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17) # Changed from 20 to 17 for broader compiler compatibility
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -15,6 +15,8 @@ else()
 endif()
 
 include(FetchContent)
+
+# Fetch GoogleTest
 FetchContent_Declare(
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
@@ -22,6 +24,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
+# Fetch JSON library
+FetchContent_Declare(json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.11.2
+)
+FetchContent_MakeAvailable(json)
+
+# Build Core Library
 add_library(f1sim_core STATIC
     src/Car.cpp
     src/CSVExporter.cpp
@@ -32,8 +42,10 @@ add_library(f1sim_core STATIC
 
 target_include_directories(f1sim_core PUBLIC include)
 
+# Build Main Executable
 add_executable(f1_simulator src/main.cpp)
-target_link_libraries(f1_simulator PRIVATE f1sim_core)
+target_link_libraries(f1_simulator PRIVATE f1sim_core nlohmann_json::nlohmann_json)
 
+# Enable Tests
 enable_testing()
 add_subdirectory(tests)
